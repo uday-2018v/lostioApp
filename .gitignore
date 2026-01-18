@@ -35,3 +35,17 @@ yarn-error.*
 
 # typescript
 *.tsbuildinfo
+
+# Java/Maven
+backend/target/
+backend/.mvn/
+backend/mvnw
+backend/mvnw.cmd
+*.class
+*.jar
+*.war
+*.ear
+*.log
+.idea/
+*.iml
+.vscode/
