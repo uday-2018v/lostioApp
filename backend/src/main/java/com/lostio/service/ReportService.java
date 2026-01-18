@@ -7,14 +7,12 @@ import com.lostio.entity.User;
 import com.lostio.exception.ResourceNotFoundException;
 import com.lostio.exception.UnauthorizedException;
 import com.lostio.repository.ReportRepository;
-import com.lostio.repository.UserRepository;
+import com.lostio.util.UserUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,8 +27,8 @@ import java.time.LocalDateTime;
 public class ReportService {
     
     private final ReportRepository reportRepository;
-    private final UserRepository userRepository;
     private final ModelMapper modelMapper;
+    private final UserUtil userUtil;
     
     /**
      * Create a new report
@@ -39,7 +37,7 @@ public class ReportService {
     public ReportResponse createReport(ReportRequest request) {
         log.debug("Creating new report: {}", request.getTitle());
         
-        User currentUser = getCurrentUser();
+        User currentUser = userUtil.getCurrentUser();
         
         Report report = new Report();
         report.setTitle(request.getTitle());
@@ -90,7 +88,7 @@ public class ReportService {
     public ReportResponse updateReport(Long id, ReportRequest request) {
         log.debug("Updating report with ID: {}", id);
         
-        User currentUser = getCurrentUser();
+        User currentUser = userUtil.getCurrentUser();
         
         Report report = reportRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Report", "id", id));
@@ -134,7 +132,7 @@ public class ReportService {
     public void deleteReport(Long id) {
         log.debug("Deleting report with ID: {}", id);
         
-        User currentUser = getCurrentUser();
+        User currentUser = userUtil.getCurrentUser();
         
         Report report = reportRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Report", "id", id));
@@ -157,16 +155,6 @@ public class ReportService {
         
         Page<Report> reports = reportRepository.searchReports(keyword, pageable);
         return reports.map(this::mapToResponse);
-    }
-    
-    /**
-     * Get current user from security context
-     */
-    private User getCurrentUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String email = authentication.getName();
-        return userRepository.findByEmail(email)
-            .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
     }
     
     /**

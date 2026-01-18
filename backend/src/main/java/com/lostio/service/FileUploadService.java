@@ -88,11 +88,16 @@ public class FileUploadService {
         
         // Check file format
         String originalFilename = file.getOriginalFilename();
-        if (originalFilename == null) {
+        if (originalFilename == null || originalFilename.isEmpty()) {
             throw new BadRequestException("Invalid file name");
         }
         
-        String extension = originalFilename.substring(originalFilename.lastIndexOf(".") + 1).toLowerCase();
+        int lastDotIndex = originalFilename.lastIndexOf(".");
+        if (lastDotIndex == -1 || lastDotIndex == originalFilename.length() - 1) {
+            throw new BadRequestException("File must have a valid extension");
+        }
+        
+        String extension = originalFilename.substring(lastDotIndex + 1).toLowerCase();
         boolean isValidFormat = false;
         for (String format : ALLOWED_FORMATS) {
             if (format.equals(extension)) {

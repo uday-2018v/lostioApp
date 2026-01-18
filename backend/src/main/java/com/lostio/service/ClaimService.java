@@ -10,14 +10,12 @@ import com.lostio.exception.ResourceNotFoundException;
 import com.lostio.exception.UnauthorizedException;
 import com.lostio.repository.ClaimRepository;
 import com.lostio.repository.ReportRepository;
-import com.lostio.repository.UserRepository;
+import com.lostio.util.UserUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,8 +32,8 @@ public class ClaimService {
     
     private final ClaimRepository claimRepository;
     private final ReportRepository reportRepository;
-    private final UserRepository userRepository;
     private final ModelMapper modelMapper;
+    private final UserUtil userUtil;
     
     /**
      * Create a new claim
@@ -44,7 +42,7 @@ public class ClaimService {
     public ClaimResponse createClaim(ClaimRequest request) {
         log.debug("Creating new claim for report: {}", request.getReportId());
         
-        User currentUser = getCurrentUser();
+        User currentUser = userUtil.getCurrentUser();
         
         Report report = reportRepository.findById(request.getReportId())
             .orElseThrow(() -> new ResourceNotFoundException("Report", "id", request.getReportId()));
@@ -73,7 +71,7 @@ public class ClaimService {
     public Page<ClaimResponse> getAllClaims(Pageable pageable) {
         log.debug("Fetching all claims");
         
-        User currentUser = getCurrentUser();
+        User currentUser = userUtil.getCurrentUser();
         
         // Only admins can view all claims
         if (currentUser.getRole() != User.Role.ADMIN) {
@@ -103,7 +101,7 @@ public class ClaimService {
     public List<ClaimResponse> getClaimsByReportId(Long reportId) {
         log.debug("Fetching claims for report: {}", reportId);
         
-        User currentUser = getCurrentUser();
+        User currentUser = userUtil.getCurrentUser();
         
         Report report = reportRepository.findById(reportId)
             .orElseThrow(() -> new ResourceNotFoundException("Report", "id", reportId));
@@ -127,7 +125,7 @@ public class ClaimService {
     public ClaimResponse updateClaimStatus(Long id, String status) {
         log.debug("Updating claim status for ID: {} to {}", id, status);
         
-        User currentUser = getCurrentUser();
+        User currentUser = userUtil.getCurrentUser();
         
         Claim claim = claimRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Claim", "id", id));
@@ -168,7 +166,7 @@ public class ClaimService {
     public void deleteClaim(Long id) {
         log.debug("Deleting claim with ID: {}", id);
         
-        User currentUser = getCurrentUser();
+        User currentUser = userUtil.getCurrentUser();
         
         Claim claim = claimRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Claim", "id", id));
@@ -181,16 +179,6 @@ public class ClaimService {
         
         claimRepository.delete(claim);
         log.info("Claim deleted successfully: {}", id);
-    }
-    
-    /**
-     * Get current user from security context
-     */
-    private User getCurrentUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String email = authentication.getName();
-        return userRepository.findByEmail(email)
-            .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
     }
     
     /**

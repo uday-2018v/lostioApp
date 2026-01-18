@@ -6,11 +6,10 @@ import com.lostio.entity.User;
 import com.lostio.exception.ResourceNotFoundException;
 import com.lostio.exception.UnauthorizedException;
 import com.lostio.repository.UserRepository;
+import com.lostio.util.UserUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +26,7 @@ public class UserService {
     
     private final UserRepository userRepository;
     private final ModelMapper modelMapper;
+    private final UserUtil userUtil;
     
     /**
      * Get user by ID
@@ -60,10 +60,7 @@ public class UserService {
         log.debug("Updating user with ID: {}", id);
         
         // Check if current user is authorized to update this profile
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String currentUserEmail = authentication.getName();
-        User currentUser = userRepository.findByEmail(currentUserEmail)
-            .orElseThrow(() -> new ResourceNotFoundException("User", "email", currentUserEmail));
+        User currentUser = userUtil.getCurrentUser();
         
         if (!currentUser.getId().equals(id) && currentUser.getRole() != User.Role.ADMIN) {
             throw new UnauthorizedException("You are not authorized to update this profile");
@@ -90,15 +87,5 @@ public class UserService {
         log.info("User updated successfully: {}", updatedUser.getId());
         
         return modelMapper.map(updatedUser, UserResponse.class);
-    }
-    
-    /**
-     * Get current user from security context
-     */
-    private User getCurrentUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String email = authentication.getName();
-        return userRepository.findByEmail(email)
-            .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
     }
 }
