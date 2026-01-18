@@ -101,7 +101,12 @@ public class FileUploadService {
             throw new BadRequestException("Invalid file");
         }
         
-        String extension = filename.substring(filename.lastIndexOf(".") + 1).toLowerCase();
+        int lastDotIndex = filename.lastIndexOf(".");
+        if (lastDotIndex == -1 || lastDotIndex == filename.length() - 1) {
+            throw new BadRequestException("File must have a valid extension");
+        }
+        
+        String extension = filename.substring(lastDotIndex + 1).toLowerCase();
         boolean validExtension = false;
         for (String allowedExt : ALLOWED_EXTENSIONS) {
             if (allowedExt.equals(extension)) {

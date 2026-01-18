@@ -155,7 +155,7 @@ public class ClaimService {
         Claim claim = claimRepository.findById(claimId)
                 .orElseThrow(() -> new ResourceNotFoundException("Claim", "id", claimId));
         
-        final String reportId = claim.getReportId();
+        String reportId = claim.getReportId();
         Report report = reportRepository.findById(reportId)
                 .orElseThrow(() -> new ResourceNotFoundException("Report", "id", reportId));
         
