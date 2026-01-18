@@ -155,8 +155,9 @@ public class ClaimService {
         Claim claim = claimRepository.findById(claimId)
                 .orElseThrow(() -> new ResourceNotFoundException("Claim", "id", claimId));
         
-        Report report = reportRepository.findById(claim.getReportId())
-                .orElseThrow(() -> new ResourceNotFoundException("Report", "id", claim.getReportId()));
+        final String reportId = claim.getReportId();
+        Report report = reportRepository.findById(reportId)
+                .orElseThrow(() -> new ResourceNotFoundException("Report", "id", reportId));
         
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "email", userEmail));
